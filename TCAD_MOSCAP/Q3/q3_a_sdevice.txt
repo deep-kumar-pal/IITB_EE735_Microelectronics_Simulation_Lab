@@ -1,0 +1,80 @@
+* This file is device simulation command file.
+* It has many sections
+* This is a comment
+
+Device MOSCAP {
+* Input Output file section *
+File{
+   Grid      = "mos_cap_msh.tdr"		* input mesh file
+   Plot      = "mos_cap_dev_plot.tdr"		* output device tdr
+   Parameter = "@parameter@"			* input material par file
+   Current   = "mos_cap_dev_current.plt"	* output current plt
+}
+* The input mesh file name should match the mesh file output of SDE.
+
+
+* Electrode (Contacts) Section *
+Electrode{
+   { Name="gate"    Voltage= 0.0   Material="Aluminum" }	* initial condition on electrodes(contacts)
+   { Name="substrate"    Voltage= 0.0 }		                * prefer equilibrium
+}
+* The name of the contacts should match with those defined in SDE command file.
+
+
+* Physics section - What physical models to activate *
+Physics{
+   EffectiveIntrinsicDensity(BandGapNarrowing (OldSlotboom))
+   Mobility(DopingDependence HighFieldSaturation Enormal)
+}
+* The format is "Keyword(Options)"
+
+
+* The output device tdr file will save these *
+* keywords properties mentioned in Plot section *
+Plot {
+   eDensity hDensity eCurrent hCurrent
+   ElectricField eEparallel hEparallel
+   eQuasiFermi hQuasiFermi
+   Potential Doping SpaceCharge
+   DonorConcentration AcceptorConcentration
+  }
+}
+* Some of these would not make sense without solving for them by activating
+* the concerned physical models in the Physics section
+
+Math {
+Extrapolate
+RelErrControl
+Iterations=20
+}
+
+File {
+Output    = "mos_cap_output"			* output log file
+ACExtract = "CV_char_ac_des.plt"
+}
+
+System {
+MOSCAP trans (gate=g substrate=b)
+Vsource_pset vg (g 0) {dc=0}
+Vsource_pset vb (b 0) {dc=0}
+}
+
+
+* Solve section specifies the sweeps and the equations to solve
+Solve{
+ Coupled { Poisson Electron Hole }
+ Quasistationary(
+ InitialStep=0.1 MaxStep=0.0005 MinStep=1.e-6
+ Goal { Parameter=vg.dc Voltage=-5 })
+ { Coupled { Poisson Electron Hole } }
+ Quasistationary(
+ InitialStep=0.01 MaxStep=0.0004 MinStep=1.e-6
+ Goal { Parameter=vg.dc Voltage=2 })
+ { ACCoupled (
+ StartFrequency=1e5 EndFrequency=1e5
+ NumberOfPoints=1 Decade
+ Node(g b) Exclude(vg vb)
+ )
+ { Poisson Electron Hole }
+ }
+}

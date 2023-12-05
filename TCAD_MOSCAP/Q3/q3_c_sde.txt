@@ -1,0 +1,60 @@
+# This file is the structure creation command file #
+# This is a commented out line 
+
+sde:clear
+
+#### Dimensions parameters (Default is um) ####
+
+(define L 1)
+(define W 1)
+(define tox 12.5e-3)
+(define Na @Na@)
+
+
+#### Regions ####
+
+(sdegeo:create-rectangle (position 0 0 0) (position (* -1 tox) L 0) "HfO2" "oxide_region")
+(sdegeo:create-rectangle (position 0 0 0) (position W L 0) "Silicon" "p_region")
+
+
+#### Doping #####
+
+(sdedr:define-constant-profile "p_doping" "BoronActiveConcentration" Na)
+(sdedr:define-constant-profile-region "p_doping_profile" "p_doping" "p_region")
+
+
+#### Contacts #####
+
+(sdegeo:define-contact-set "substrate" 4.0 (color:rgb 1.0 0.0 0.0 ) "##")
+(sdegeo:define-contact-set "gate" 4.0 (color:rgb 1.0 0.0 0.0 ) "||")
+
+(sdegeo:define-2d-contact (find-edge-id (position W (/ L 2) 0)) "substrate")
+(sdegeo:define-2d-contact (find-edge-id (position (* -1 tox) (/ L 2) 0)) "gate")
+
+(sde:save-model "mos_cap")
+
+
+#### Global course mesh ####
+
+(sdedr:define-refeval-window "RefWin.Global" "Rectangle" (position (* -1 tox) L 0) (position W 0 0))
+(sdedr:define-refinement-size "RefDef.Global" (/ W 20) (/ L 20) (/ W 20) (/ L 20) 1 1)
+(sdedr:define-refinement-placement "Place.Global" "RefDef.Global" "RefWin.Global" )
+
+#### Oxide course mesh ####
+
+(sdedr:define-refeval-window "RefWin.Ox" "Rectangle" (position (- (* -1 tox) 3e-3) L 0) (position 0 0 0))
+(sdedr:define-refinement-size "RefDef.Ox" (/ tox 31.25) (/ L 20) (/ tox 31.25) (/ L 20) 1 1)
+(sdedr:define-refinement-placement "Place.Ox" "RefDef.Ox" "RefWin.Ox" )
+
+
+#### Oxide-Semiconductor junction fine mesh ####
+
+(sdedr:define-refeval-window "RefWin.Dep" "Rectangle" (position 0 L 0) (position (/ W 16) 0 0))
+(sdedr:define-refinement-size "RefDef.Dep" (/ W 100) (/ L 20) (/ W 100) (/ L 20) 1 1)
+(sdedr:define-refinement-placement "Place.Dep" "RefDef.Dep" "RefWin.Dep" )
+
+
+#### Generate mesh ####
+
+(sde:build-mesh "snmesh" "" "mos_cap")
+

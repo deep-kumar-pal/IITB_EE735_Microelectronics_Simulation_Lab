@@ -1,0 +1,25 @@
+`include "disciplines.vams"
+`include "constants.vams"
+module simple_NMOS(d,g,s,b);
+electrical d ,g ,s ,b ; //input-output nodes
+parameter real W=1e-5 from [0:inf]; // width of MOSFET
+parameter real L=1e-5 from [0:inf]; // Length of MOSFET
+parameter real Vth=0.6 from [0:inf]; // Threshold voltage
+parameter real mu=1400 from [0:inf]; // Electron mobility in cm^2 per Volt-sec
+parameter real TOX=20e-7 from [0:inf]; // Oxide Thickness
+parameter real EP_OX=3.9*8.85e-14 from [0:inf]; // Permittivity of oxide
+parameter real EP_SI=11.7*8.85e-14 from [0:inf]; // Permittivity of Silicon
+//... NMOS I-V Relation ...//
+real Id, Vgs, Vds;
+ analog begin
+  Vgs = V(g,s);
+  Vds = V(d,s);
+  if (Vgs < Vth)
+    Id = 0; // Cut-off region
+  else if ((Vgs >= Vth) && (Vgs - Vth >= Vds))
+    Id = 0.5*mu*(EP_OX/TOX)*(W/L)*(2*(Vgs-Vth)*Vds-Vds*Vds); // Linear region
+  else if ((Vgs >= Vth) && (Vgs - Vth < Vds))
+    Id = 0.5*mu*(EP_OX/TOX)*(W/L)*(Vgs-Vth)*(Vgs-Vth); // Saturation region
+  I(d,s) <+ Id;
+ end
+endmodule

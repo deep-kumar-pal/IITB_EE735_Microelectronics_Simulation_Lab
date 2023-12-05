@@ -1,0 +1,65 @@
+# This file is the structure creation command file #
+# This is a commented out line 
+
+sde:clear
+
+#### Dimensions parameters (Default is um) ####
+
+(define Ln1 500e-3)
+(define Lp 100e-3)
+(define Ln2 700e-3)
+(define h 100e-3)
+
+#### Doping parameters (Default is per cc) ####
+
+(define Nd1 @Nd1@)
+(define Na @Na@)
+(define Nd2 @Nd2@)
+
+
+#### Regions ####
+
+(sdegeo:create-rectangle (position 0 0 0) (position (* -1 Ln1) h 0) "Silicon" "n1_region")
+(sdegeo:create-rectangle (position 0 0 0) (position Lp h 0) "Silicon" "p_region")
+(sdegeo:create-rectangle (position Lp h 0) (position (+ Lp Ln2) 0 0) "Silicon" "n2_region")
+
+
+#### Doping #####
+
+(sdedr:define-constant-profile "n1_doping" "ArsenicActiveConcentration" Nd1)
+(sdedr:define-constant-profile-region "n1_doping_profile" "n1_doping" "n1_region")
+
+(sdedr:define-constant-profile "p_doping" "BoronActiveConcentration" Na)
+(sdedr:define-constant-profile-region "p_doping_profile" "p_doping" "p_region")
+
+(sdedr:define-constant-profile "n2_doping" "ArsenicActiveConcentration" Nd2)
+(sdedr:define-constant-profile-region "n2_doping_profile" "n2_doping" "n2_region")
+
+
+#### Contacts #####
+
+(sdegeo:define-contact-set "n1_contact" 4.0 (color:rgb 1.0 0.0 0.0 ) "##")
+(sdegeo:define-contact-set "n2_contact" 4.0 (color:rgb 0.0 1.0 0.0 ) "||")
+
+(sdegeo:define-2d-contact (find-edge-id (position (* -1 Ln1) (/ h 2) 0)) "n1_contact")
+(sdegeo:define-2d-contact (find-edge-id (position (+ Lp Ln2) (/ h 2) 0)) "n2_contact")
+
+(sde:save-model "npn_device")
+
+
+#### Global course mesh ####
+
+(sdedr:define-refeval-window "RefWin.Global" "Rectangle" (position (* -1 Ln1) h 0) (position (+ Lp Ln2) 0 0))
+(sdedr:define-refinement-size "RefDef.Global" (/ Lp 20) (/ h 20) (/ Lp 20) (/ h 20) 1 1)
+(sdedr:define-refinement-placement "Place.Global" "RefDef.Global" "RefWin.Global" )
+
+
+#### Junction and p-region fine mesh ####
+
+(sdedr:define-refeval-window "RefWin.Dep" "Rectangle" (position (/ (* -1 Ln1) 10) h 0) (position  (+ Lp (/ Ln2 5)) 0 0))
+(sdedr:define-refinement-size "RefDef.Dep" (/ Lp 50) (/ h 20) (/ Lp 50) (/ h 20) 1 1)
+(sdedr:define-refinement-placement "Place.Dep" "RefDef.Dep" "RefWin.Dep" )
+
+#### Generate mesh ####
+
+(sde:build-mesh "snmesh" "" "npn_device")

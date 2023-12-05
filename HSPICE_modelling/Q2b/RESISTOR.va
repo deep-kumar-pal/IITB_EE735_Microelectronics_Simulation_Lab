@@ -1,0 +1,9 @@
+`include "disciplines.vams"
+module simple_resistor(p,n) ;
+inout p,n ;
+parameter real resistance = 1000.0 from (0.0:inf) ;
+electrical p,n ;
+analog begin
+ I(p,n) <+ V(p,n)/resistance ;
+end
+endmodule

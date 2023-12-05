@@ -1,0 +1,47 @@
+# This file is the structure creation command file #
+# This is a commented out line 
+
+sde:clear
+
+#### Dimensions parameters (Default is um) ####
+
+(define Lp 10)
+(define h 2)
+
+#### Doping parameters (Default is per cc) ####
+
+(define Na @Na@)
+
+
+#### Regions ####
+
+(sdegeo:create-rectangle (position 0 0 0) (position Lp h 0) "Silicon" "p_region")
+
+
+#### Doping #####
+
+(sdedr:define-constant-profile "p_doping" "BoronActiveConcentration" Na)
+(sdedr:define-constant-profile-region "p_doping_profile" "p_doping" "p_region")
+
+
+#### Contacts #####
+
+(sdegeo:define-contact-set "p_lt_contact" 4.0 (color:rgb 1.0 0.0 0.0 ) "##")
+(sdegeo:define-contact-set "p_rt_contact" 4.0 (color:rgb 0.0 1.0 0.0 ) "||")
+
+(sdegeo:define-2d-contact (find-edge-id (position 0 (/ h 2) 0)) "p_lt_contact")
+(sdegeo:define-2d-contact (find-edge-id (position Lp (/ h 2) 0)) "p_rt_contact")
+
+(sde:save-model "resistor")
+
+
+#### Global course mesh ####
+
+(sdedr:define-refeval-window "RefWin.Global" "Rectangle" (position 0 h 0) (position Lp 0 0))
+(sdedr:define-refinement-size "RefDef.Global" (/ Lp 100) (/ h 20) (/ Lp 100) (/ h 20) 1 1)
+(sdedr:define-refinement-placement "Place.Global" "RefDef.Global" "RefWin.Global" )
+
+
+#### Generate mesh ####
+
+(sde:build-mesh "snmesh" "" "resistor")

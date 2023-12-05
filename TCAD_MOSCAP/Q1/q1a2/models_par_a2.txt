@@ -1,0 +1,10 @@
+#define ParFileDir .
+
+Material="Silicon" {
+  #includeext "ParFileDir/Silicon.par"
+Scharfetter * SRH recombination lifetimes
+{ 
+taumin = 0.0000e+00, 0.0000e+00
+taumax = 1.0000e-07, 3.0000e-08
+}
+}
